@@ -35,27 +35,35 @@ class CinemaSerializer(serializers.ModelSerializer):
         fields = ['image', 'title', 'schedule', 'address', 'contact']
 
 
+class RoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = ['id', 'title']
+
+    # def create(self, validated_data):
+    #     create_cinema = validated_data.pop('cinema')
+    #     room = Room.objects.create(**validated_data)
+    #
+    #     for cinema in create_cinema:
+    #         Seat.objects.create(room=room, **cinema)
+    #
+    #     return room
+
+
 class SeatSerializer(serializers.ModelSerializer):
+    # room = RoomSerializer
+
     class Meta:
         model = Seat
         fields = "__all__"
 
-
-class RoomSerializer(serializers.ModelSerializer):
-    cinema = CinemaSerializer(many=True)
-
-    class Meta:
-        model = Room
-        fields = ['id', 'title', 'cinema', 'seat']
-
-    def create(self, validated_data):
-        create_cinema = validated_data.pop('cinema')
-        room = Room.objects.create(**validated_data)
-
-        for cinema in create_cinema:
-            Seat.objects.create(room=room, **cinema)
-
-        return room
+    # def create(self, validated_data):
+    #     create_room = validated_data.pop('room')
+    #     seat = Seat.objects.create(**validated_data)
+    #
+    #     for room in create_room:
+    #         Room.objects.create(seat=seat, **room)
+    #     return seat
 
 
 class MovieSerializer(serializers.ModelSerializer):

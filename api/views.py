@@ -31,7 +31,8 @@ class UserAPIView(mixins.ListModelMixin,
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        count = User.objects.all().delete()
+        data = request.data
+        count = User.objects.filter(username=data["username"]).delete()
         return JsonResponse({'message': '{} User were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -57,7 +58,8 @@ class CinemaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        count = Cinema.objects.all().delete()
+        data = request.data
+        count = Cinema.objects.filter(title=data["title"]).delete()
         return JsonResponse({'message': '{} Cinema were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -83,7 +85,8 @@ class MovieViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        count = Movie.objects.all().delete()
+        data = request.data
+        count = Movie.objects.filter(title=data["title"]).delete()
         return JsonResponse({'message': '{} Movie were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -109,7 +112,8 @@ class RoomViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        count = Room.objects.all().delete()
+        data = request.data
+        count = Room.objects.filter(title=data["title"]).delete()
         return JsonResponse({'message': '{} Room were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -119,7 +123,8 @@ class SeatViewSet(viewsets.ModelViewSet):
     serializer_class = SeatSerializer
 
     def delete(self, request):
-        count = Seat.objects.all().delete()
+        data = request.data
+        count = Seat.objects.filter(number_seat=data["number_seat"], number_row=data["number_row"]).delete()
         return JsonResponse({'message': '{} Seat were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -129,7 +134,8 @@ class ShowTimeViewSet(viewsets.ModelViewSet):
     serializer_class = ShowTimeSerializer
 
     def delete(self, request):
-        count = ShowTime.objects.all().delete()
+        data = request.data
+        count = ShowTime.objects.filter(time=data["time"]).delete()
         return JsonResponse({'message': '{} ShowTime were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -137,6 +143,15 @@ class ShowTimeViewSet(viewsets.ModelViewSet):
 class TicketViewSet(APIView):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
+
+    def get(self, request):
+        ticket = Ticket.objects.all()
+        title = request.query_params.get('title', None)
+        if title is not None:
+            ticket = Ticket.filter(title__icontains=title)
+
+        ticket_serializer = TicketSerializer(ticket, many=True)
+        return JsonResponse(ticket_serializer.data, safe=False)
 
     def post(self, request):
         data = request.data
@@ -148,8 +163,21 @@ class TicketViewSet(APIView):
             Ticket.objects.create(seat_id=data["seat"], show_time_id=data["show_time"], user=request.user)
             return Response(data, status=status.HTTP_201_CREATED)
 
+    def put(self, request):
+        data = request.data
+        user = Ticket.objects.get(seat_id=data["seat"], show_time_id=data["show_time"]).user
+        if request.user == user:
+            Ticket.objects.get_or_create(seat_id=data["seat"], show_time_id=data["show_time"], user=request.user)
+        elif not Ticket.objects.filter(seat_id=data["seat"], show_time_id=data["show_time"]).exists():
+            Ticket.objects.create(seat_id=data["seat"], show_time_id=data["show_time"], user=request.user)
+        else:
+            return JsonResponse({'message': 'This ticket is already book'})
+
+        return Response(data, status=status.HTTP_201_CREATED)
+
     def delete(self, request):
-        count = Ticket.objects.all().delete()
+        data = request.data
+        count = Ticket.objects.filter(seat_id=data["seat"], show_time_id=data["show_time"]).delete()
         return JsonResponse({'message': '{} Ticket were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -175,6 +203,7 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        count = Feedback.objects.all().delete()
+        data = request.data
+        count = Feedback.objects.filter(comment=data["comment"]).delete()
         return JsonResponse({'message': '{} Feedback were deleted successfully!'.format(count[0])},
                             status=status.HTTP_204_NO_CONTENT)

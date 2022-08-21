@@ -4,26 +4,25 @@ from django.db import models
 from django.utils import timezone
 
 
-class Room(models.Model):
-    title = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.title
-
-
 class Cinema(models.Model):
     image = models.ImageField(upload_to='images/', null=True)
     title = models.CharField(max_length=50)
     schedule = models.CharField(max_length=200, verbose_name='расписание')
     address = models.CharField(max_length=200, verbose_name='адрес')
     contact = models.CharField(max_length=200, verbose_name='контакты')
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='cinema')
 
     def __str__(self):
         return self.title
 
     class Meta:
         unique_together = ['id', 'title']
+
+
+class Room(models.Model):
+    title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
 
 
 class Seat(models.Model):
@@ -55,6 +54,6 @@ class Ticket(models.Model):
 
 
 class Feedback(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='user')
     comment = models.CharField(max_length=500)
     creation_date = models.DateTimeField(default=timezone.now)
